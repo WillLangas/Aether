@@ -1,3 +1,4 @@
+# Component Info
 Here are folders for each individual component. Most of the following code is used for testing and setting up components
 
 Components:
