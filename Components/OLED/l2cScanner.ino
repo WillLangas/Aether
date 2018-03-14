@@ -1,7 +1,6 @@
 #include <Wire.h> //Include wire library 
 
-void setup()
-{
+void setup(){
   Wire.begin();
  
   Serial.begin(9600);
@@ -9,8 +8,7 @@ void setup()
   Serial.println("I2C Scanner, Intialized");
 }
  
-void loop()
-{
+void loop(){
   byte error, address;
   int nDevices;
  
