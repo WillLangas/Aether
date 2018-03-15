@@ -1,0 +1,4 @@
+# OLED Info
+
+The OLED screens are l2c. The Wire library for arduino helps interface with them
+https://www.arduino.cc/en/Reference/Wire
