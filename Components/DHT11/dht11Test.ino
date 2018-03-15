@@ -9,15 +9,15 @@ void setup() {
 
 void loop() {
   int readData = DHT.read22(dataPin); // Reads the data from the sensor
-  float t = DHT.temperature; // Gets the values of the temperature
-  float h = DHT.humidity; // Gets the values of the humidity
+  float temp = DHT.temperature; // Gets the values of the temperature
+  float humid = DHT.humidity; // Gets the values of the humidity
   
   // Printing the results on the serial monitor
   Serial.print("Temperature = ");
-  Serial.print(t);
+  Serial.print(temp);
   Serial.print(" *C ");
   Serial.print("    Humidity = ");
-  Serial.print(h);
+  Serial.print(humid);
   Serial.println(" % ");
   
   delay(4000); // Delays 4 seconds
