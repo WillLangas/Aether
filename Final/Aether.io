@@ -1,12 +1,39 @@
 /* Aether Code
     Will Langas and Jack Kelly
     4/15/2018
-    Don't Steal our Shit
+    Don't Steal our code plz
 */
+
+/***********/
+/*INTERFACE*/
+/***********/
+int toggleButton = 2; 
 
 /****************/
 /*OLED VARIABLES*/
 /****************/
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#define OLED_RESET 4
+
+Adafruit_SSD1306 Display1(OLED_RESET); //Initializes a new display object
+Adafruit_SSD1306 Display2(OLED_RESET);
+#define XPOS 0
+#define YPOS 1
+#define DELTAY 2
+
+#define LOGO16_GLCD_HEIGHT 16
+#define LOGO16_GLCD_WIDTH  16
+
+/**************/
+/*CO VARIABLES*/
+/**************/
+int SensorReading;
+float PPM;
+
+int HeaterPin5 = 44;
+int HeaterPin15 = 22;
 
 /***************/
 /*CCS VARIABLES*/
@@ -47,7 +74,40 @@ unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;
 
+/**************/
+/*   ARRAYS   */
+/**************/
+String measures[] = {"Humidity", "Temp", "PM", "VOC", "CO2", "CO"};
+int textSizes[] = {2, 3, 3, 3, 3, 3};
+float values[6];
+
 void setup() {
+
+  pinMode(toggleButton, INPUT);
+  
+  Serial.begin(9600);
+  Display1.begin(SSD1306_SWITCHCAPVCC, 0x3D); //DISPLAY LEFT
+  Display1.clearDisplay();
+  Display1.display();
+
+  Display1.setCursor(30, 8);
+  Display1.setTextSize(2);
+  Display1.setTextColor(WHITE, BLACK);
+
+  Display2.begin(SSD1306_SWITCHCAPVCC, 0x3C); //DISPLAY RIGHT
+  Display2.clearDisplay();
+  Display2.display();
+
+  Display2.setCursor(30, 8);
+  Display2.setTextSize(1);
+  Display2.setTextColor(WHITE, BLACK);
+  Display2.clearDisplay();
+
+  Display2.println("Will");
+  Display2.display();
+  Display1.println("AETHER");
+  Display1.display();
+
   if (!ccs.begin()) {
     Serial.println("Failed to start sensor! Please check your wiring.");
     while (1);
@@ -70,24 +130,22 @@ void setup() {
   pinMode(redPin3, OUTPUT);
   pinMode(greenPin3, OUTPUT);
   pinMode(bluePin3, OUTPUT);
+  pinMode(HeaterPin5, OUTPUT);
+  pinMode(HeaterPin15, OUTPUT);
 }
 
-/***************/
-/*DHT FUNCTIONS*/
-/***************/
-void dhtOut() {
-  int readData = DHT.read22(dataPin); // Reads the data from the sensor
+/****************/
+/*OLED FUNCTIONS*/
+/****************/
+void bothDisplay() {
+  Display1.display();
+  Display2.display();
+}
 
-  float t = DHT.temperature; // Gets the values of the temperature
-  float h = DHT.humidity; // Gets the values of the humidity
-
-  // Printing the results on the serial monitor
-  Serial.print("Temperature = ");
-  Serial.print(t);
-  Serial.print(" *C ");
-  Serial.print("    Humidity = ");
-  Serial.print(h);
-  Serial.println(" % ");
+void bothClear() {
+  Display1.clearDisplay();
+  Display2.clearDisplay();
+  bothDisplay();
 }
 
 /***************/
@@ -111,6 +169,27 @@ void setColor3(int redValue, int greenValue, int blueValue) {
   analogWrite(bluePin3, blueValue);
 }
 
+/***************/
+/*DHT FUNCTIONS*/
+/***************/
+void dhtOut() {
+  int readData = DHT.read22(dataPin); // Reads the data from the sensor
+
+  float t = DHT.temperature; // Gets the values of the temperature
+  float h = DHT.humidity; // Gets the values of the humidity
+
+  // Printing the results on the serial monitor
+  Serial.print("Temperature = ");
+  Serial.print(t);
+  Serial.print(" *C ");
+  Serial.print("    Humidity = ");
+  Serial.print(h);
+  Serial.println(" % ");
+
+  values[0] = h;
+  values[1] = t;
+}
+
 /**************/
 /*PM FUNCTIONS*/
 /**************/
@@ -132,10 +211,11 @@ void pmOut() {
   } else {
     setColor(0, 255, 0);
   }
+  values[2] = concentration;
 }
 
 /***************/
-/*CCS FUNCTIONS*/
+/*VOC FUNCTIONS*/
 /***************/
 void vocOut() {
   int voc = ccs.getTVOC();
@@ -161,11 +241,54 @@ void vocOut() {
   } else {
     setColor2(0, 255, 0);
   }
+  values[3] = voc;
+  values[4] = co2;
 }
 
-void loop() {
+/*********************/
+/*CO SENSOR FUNCTIONS*/
+/*********************/
+void clean() {
+  for (int i = 0; i < 60; i++) {
+    digitalWrite(HeaterPin5, HIGH);
+    Serial.println("cleaning");
+    delay(1000);
+    fastSensors();
+  }
+  digitalWrite(HeaterPin5, LOW);
+}
+
+void co() {
+  for (int i = 0; i < 90; i++) {
+    digitalWrite(HeaterPin15, HIGH);
+    SensorReading = analogRead(A1);
+    PPM = .5 * SensorReading - 19.355;
+    Serial.print (PPM);
+    Serial.println (" CO PPM");
+    delay(1000);
+  }
+  digitalWrite(HeaterPin15, LOW);
+  values[5] = PPM;
+}
+
+void fastSensors() {
   pmOut();
   dhtOut();
   vocOut();
-  delay(1000);
+}
+
+void loop() {
+  clean();
+  co();
+
+  int c = 0;
+
+  if(toggleButton == 1){
+    delay(500);
+    bothClear();
+    Display1.setTextSize(textSizes[c]);
+    Display1.println(measures[c]);
+    Display2.println(values[c]);
+    bothDisplay();
+  }
 }
