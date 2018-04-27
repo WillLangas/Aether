@@ -8,6 +8,7 @@
  JST Pin 3 (Red wire)    => Arduino 5VDC
  JST Pin 4 (Yellow wire) => Arduino Digital Pin 8
  */
+ 
 int pin = 8;
 unsigned long duration;
 unsigned long starttime;
