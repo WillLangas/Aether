@@ -7,7 +7,7 @@
 /***********/
 /*INTERFACE*/
 /***********/
-int toggleButton = 2; 
+int toggleButton = 2;
 
 /****************/
 /*OLED VARIABLES*/
@@ -31,6 +31,7 @@ Adafruit_SSD1306 Display2(OLED_RESET);
 /**************/
 int SensorReading;
 float PPM;
+float PPMaverage;
 
 int HeaterPin5 = 44;
 int HeaterPin15 = 22;
@@ -84,7 +85,7 @@ float values[6];
 void setup() {
 
   pinMode(toggleButton, INPUT);
-  
+
   Serial.begin(9600);
   Display1.begin(SSD1306_SWITCHCAPVCC, 0x3D); //DISPLAY LEFT
   Display1.clearDisplay();
@@ -98,15 +99,21 @@ void setup() {
   Display2.clearDisplay();
   Display2.display();
 
-  Display2.setCursor(30, 8);
+  Display2.setCursor(5, 0);
   Display2.setTextSize(1);
   Display2.setTextColor(WHITE, BLACK);
   Display2.clearDisplay();
 
-  Display2.println("Will");
-  Display2.display();
-  Display1.println("AETHER");
+  Display1.println("Aether");
   Display1.display();
+  Display2.clearDisplay();
+  Display2.println("Digital Electronics");
+  Display2.setCursor(30, 10);
+  Display2.println("Will Langas");
+  Display2.display();
+  Display2.setCursor(30, 22);
+  Display2.println("Jack Kelly");
+  Display2.display();
 
   if (!ccs.begin()) {
     Serial.println("Failed to start sensor! Please check your wiring.");
@@ -132,6 +139,11 @@ void setup() {
   pinMode(bluePin3, OUTPUT);
   pinMode(HeaterPin5, OUTPUT);
   pinMode(HeaterPin15, OUTPUT);
+
+  delay(5000);
+  Display1.clearDisplay();
+  Display2.clearDisplay();
+  bothClear();
 }
 
 /****************/
@@ -262,6 +274,7 @@ void co() {
   for (int i = 0; i < 90; i++) {
     digitalWrite(HeaterPin15, HIGH);
     SensorReading = analogRead(A1);
+    
     PPM = .5 * SensorReading - 19.355;
     Serial.print (PPM);
     Serial.println (" CO PPM");
@@ -280,15 +293,18 @@ void fastSensors() {
 void loop() {
   clean();
   co();
+  Serial.println(digitalRead(2));
 
   int c = 0;
 
-  if(toggleButton == 1){
+  if (digitalRead(toggleButton == 0)) {
+    c = c++;
     delay(500);
     bothClear();
     Display1.setTextSize(textSizes[c]);
     Display1.println(measures[c]);
     Display2.println(values[c]);
+    bothDisplay();
     bothDisplay();
   }
 }
