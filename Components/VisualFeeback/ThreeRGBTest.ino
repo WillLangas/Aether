@@ -1,14 +1,17 @@
-int redPin = 7;
+//Cycles through various RGB colors on the three LEDs
+//Ensures each has been wired correctly and is functioning
+
+int redPin = 5;
 int greenPin = 6;
-int bluePin = 5;
+int bluePin = 7;
 
-int redPin2 = 10;
+int redPin2 = 8;
 int greenPin2 = 9;
-int bluePin2 = 8;
+int bluePin2 = 10;
 
-int redPin3 = 10;
-int greenPin3 = 9;
-int bluePin3 = 8;
+int redPin3 = 11;
+int greenPin3 = 12;
+int bluePin3 = 13;
 
 void setup() {
   pinMode(redPin, OUTPUT);
