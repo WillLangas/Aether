@@ -208,7 +208,7 @@ void dhtOut() {
   Display1.clearDisplay();
   Display1.println("Humidity: ");
   Display1.setCursor(57, 8);
-  float tf = (t * (9/5)) + 32;
+  float tf = (t * (9/5)) + 32; //Attempt at printing it in fahrenheit
   Display1.println(h);
   Display1.setCursor(90, 8);
   Display1.println("%");
@@ -255,7 +255,7 @@ void pmOut() {
 /***************/
 void vocOut() {
   int voc = ccs.getTVOC();
-  int co2 = ccs.geteCO2();
+  int co2 = ccs.geteCO2(); //Acquires VOC and CO2 Measurements, REMOVE CO2 COMPLETELY???
   if (ccs.available()) {
     float temp = ccs.calculateTemperature();
     if (!ccs.readData()) {
@@ -266,7 +266,7 @@ void vocOut() {
       Serial.print("ppb   Temp:");
       Serial.println(temp);
     }
-    else {
+    else{ 
       Serial.println("ERROR!");
       while (1);
     }
@@ -274,7 +274,7 @@ void vocOut() {
 
   if(voc >= 250){
     setColor(255,0,0);
-  } else if(voc < 250 && voc >= 50){
+  } else if(voc < 250 && voc >= 50){ //Red, green, or yellow on RGB?
     setColor(255,255,0);
   } else {
     setColor(0,255,0);
@@ -294,7 +294,7 @@ void vocOut() {
 /*********************/
 void clean() {
   for (int i = 0; i < 60; i++) {
-    digitalWrite(HeaterPin5, HIGH);
+    digitalWrite(HeaterPin5, HIGH); //Clean function for CO sensor, 60 iterations
     Serial.println("cleaning");
     delay(1000);
     fastSensors();
@@ -304,13 +304,13 @@ void clean() {
     Display2.println("CO: ");
     Display2.setCursor(25,8);
     Display2.println("Cleaning");
-    Display2.display();  
+    Display2.display();
   }
   digitalWrite(HeaterPin5, LOW);
 }
 
 void co() {
-  for (int i = 0; i < 90; i++) {
+  for (int i = 0; i < 90; i++) { //Averages CO values
     digitalWrite(HeaterPin15, HIGH);
     SensorReading = analogRead(A1);
 
