@@ -4,24 +4,26 @@
     Don't Steal our code plz
 */
 
+//Simplified version, no toggling through display screens. 
+
 /***********/
 /*INTERFACE*/
 /***********/
 int toggleButton = 2; //For the array toggling on OLEDs
 
-float h;
-float t;
+float h; //Humidity 
+float t; //Temperature 
 
 /****************/
 /*OLED VARIABLES*/
 /****************/
 #include <SPI.h>
-#include <Wire.h>
+#include <Wire.h> //l2c Library 
 #include <Adafruit_SSD1306.h>
 #define OLED_RESET 4
-
-Adafruit_SSD1306 Display1(OLED_RESET); //Initializes a new display object
-Adafruit_SSD1306 Display2(OLED_RESET); //Second Display
+ 
+Adafruit_SSD1306 Display1(OLED_RESET); //Initializes a new display object (Display1)
+Adafruit_SSD1306 Display2(OLED_RESET); //Second Display (Display2)
 #define XPOS 0
 #define YPOS 1
 #define DELTAY 2
@@ -32,7 +34,7 @@ Adafruit_SSD1306 Display2(OLED_RESET); //Second Display
 /**************/
 /*CO VARIABLES*/
 /**************/
-int SensorReading;
+int SensorReading; //Jack's stuff, stay away Will
 float PPM;
 float PPMaverage;
 
@@ -42,20 +44,20 @@ int HeaterPin15 = 22;
 /***************/
 /*CCS VARIABLES*/
 /***************/
-#include "Adafruit_CCS811.h"
+#include "Adafruit_CCS811.h" //Library for VOC sensor
 Adafruit_CCS811 ccs;
 
 /***************/
 /*DHT VARIABLES*/
 /***************/
-#include <dht.h>
+#include <dht.h> //DHT library 
 #define dataPin 4 // Defines pin number to which the sensor is connected
 dht DHT; // Creats a DHT object
 
 /***************/
 /*RGB VARIABLES*/
 /***************/
-int redPin = 33;
+int redPin = 33; //Each pin corresponds to a R G or B pin on an LED
 int greenPin = 35;
 int bluePin = 37;
 
@@ -70,7 +72,7 @@ int bluePin3 = 49;
 /**************/
 /*PM VARIABLES*/
 /**************/
-int pm = 8;
+int pm = 8; //Input pin for PM sensor
 unsigned long duration;
 unsigned long starttime;
 unsigned long sampletime_ms = 30000;//sampe 30s ;
@@ -81,16 +83,17 @@ float concentration = 0;
 /**************/
 /*   ARRAYS   */
 /**************/
-String measures[] = {"Humidity", "Temp", "PM", "VOC", "CO2", "CO"};
+String measures[] = {"Humidity", "Temp", "PM", "VOC", "CO2", "CO"}; //UNUSED 
 float values[6];
 
 void setup() {
 
-  pinMode(toggleButton, INPUT);
+  pinMode(toggleButton, INPUT); //UNUSED
 
   Serial.begin(9600);
+    
   Display1.begin(SSD1306_SWITCHCAPVCC, 0x3D); //DISPLAY LEFT
-  Display1.clearDisplay();
+  Display1.clearDisplay(); //Clears the display 
   Display1.display();
 
   Display1.setCursor(30, 8);
@@ -109,7 +112,7 @@ void setup() {
   Display1.println("Aether");
   Display1.display();
   Display2.clearDisplay();
-  Display2.println("Digital Electronics");
+  Display2.println("Digital Electronics"); //Intro/Loading Screen 
   Display2.setCursor(30, 10);
   Display2.println("Will Langas");
   Display2.display();
@@ -123,14 +126,14 @@ void setup() {
   }
 
   while (!ccs.available());
-  float temp = ccs.calculateTemperature();
+  float temp = ccs.calculateTemperature(); //Starts up VOC sensor
   ccs.setTempOffset(temp - 25.0);
 
   Serial.begin(9600);
   pinMode(pm, INPUT);
   starttime = millis(); //Current time
 
-  pinMode(redPin, OUTPUT);
+  pinMode(redPin, OUTPUT); //RGB Pins
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
   pinMode(redPin2, OUTPUT);
@@ -145,7 +148,7 @@ void setup() {
   delay(5000);
   Display1.clearDisplay();
   Display2.clearDisplay();
-  bothClear();
+  bothDisplay();
 }
 
 /****************/
@@ -165,7 +168,7 @@ void bothClear() {
 /***************/
 /*RGB FUNCTIONS*/
 /***************/
-void setColor(int redValue, int greenValue, int blueValue) {
+void setColor(int redValue, int greenValue, int blueValue) { //Writes an RGB value to the LED setColor1(255,0,0)
   analogWrite(redPin, redValue);
   analogWrite(greenPin, greenValue);
   analogWrite(bluePin, blueValue);
@@ -200,9 +203,6 @@ void dhtOut() {
   Serial.print(h);
   Serial.println(" % ");
 
-  values[0] = h;
-  values[1] = t;
-
   Display1.setCursor(0, 8);
   Display1.setTextSize(1);
   Display1.clearDisplay();
@@ -220,7 +220,7 @@ void dhtOut() {
   Display2.clearDisplay();
   Display2.display();
 
-  return h;
+  return h; //Just in case
   return t;
 }
 
