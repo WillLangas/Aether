@@ -309,6 +309,8 @@ void clean() {
   digitalWrite(HeaterPin5, LOW);
 }
 
+float values[90];
+
 void co() {
   for (int i = 0; i < 90; i++) { //Averages CO values
     digitalWrite(HeaterPin15, HIGH);
@@ -319,6 +321,7 @@ void co() {
     Serial.println (" CO PPM");
     fastSensors();
     delay(1000);
+    values[i] = PPM; //WORK ON THIS
   }
   digitalWrite(HeaterPin15, LOW);
   values[5] = PPM;
