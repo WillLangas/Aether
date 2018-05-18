@@ -6,6 +6,8 @@
 
 //Simplified version, no toggling through display screens.
 
+float index = 100;
+
 /***********/
 /*INTERFACE*/
 /***********/
@@ -190,7 +192,7 @@ void setColor3(int redValue, int greenValue, int blueValue) {
 /***************/
 /*DHT FUNCTIONS*/
 /***************/
-void dhtOut() {
+int dhtOut() {
   int readData = DHT.read22(dataPin); // Reads the data from the sensor
 
   float t = DHT.temperature; // Gets the values of the temperature
@@ -218,12 +220,15 @@ void dhtOut() {
   Display1.println(t);
   Display1.display();
   Display2.clearDisplay();
+
+  return t;
+  return h;
 }
 
 /**************/
 /*PM FUNCTIONS*/
 /**************/
-void pmOut() {
+int pmOut() {
   duration = pulseIn(pm, LOW);
   lowpulseoccupancy = lowpulseoccupancy + duration;
 
@@ -250,12 +255,17 @@ void pmOut() {
   Display2.setCursor(85, 0);
   Display2.println(concentration);
   Display2.display();
+
+  float pmIndex = (-0.096227 * concentration) - 3.3404;
+
+  return pmIndex;
+  return concentration;
 }
 
 /***************/
 /*VOC FUNCTIONS*/
 /***************/
-void vocOut() {
+int vocOut() {
   int voc = ccs.getTVOC();
   int co2 = ccs.geteCO2(); //Acquires VOC and CO2 Measurements, REMOVE CO2 COMPLETELY???
   if (ccs.available()) {
@@ -289,6 +299,11 @@ void vocOut() {
   Display2.setCursor(53, 20);
   Display2.println("PPB");
   Display2.display();
+
+  float vocIndex = (-0.06 * voc) - 4;
+
+  return vocIndex;
+  return voc;
 }
 
 /*********************/
@@ -311,7 +326,7 @@ void clean() {
   digitalWrite(HeaterPin5, LOW);
 }
 
-void co() {
+int co() {
   float sumPPM[90];
   for (int i = 0; i < 90; i++) {
     digitalWrite(HeaterPin15, HIGH);
@@ -329,14 +344,41 @@ void co() {
   digitalWrite(HeaterPin15, LOW);
   for (int i = 0; i < 90; i++) {
     sum += sumPPM[i];
+    return sum;
   }
 
   float finalPPM = sum / 90;
   Serial.println(finalPPM);
   Serial.print("AHHHHHH");
+
+  float coIndex = (-0.1765*finalPPM) -12.88;
+
+  return coIndex; //ARRAY WITH BOTH TO BE RETURNED
+  return finalPPM;
+}
+
+float findIndex(){
+  float finalIndex = index - pmIndex - vocIndex - coIndex;
+  Display1.setCursor(0,0)
+  Display1.setTextSize(1);
+  Display1.println("Index: ");
+  Display1.setCursor(50);
+  Display1.println(finalIndex);
+  Display1.display();
+  Display2.clearDisplay();
+
+  if (finalIndex >= 250) {
+    setColor3(255, 0, 0);
+  } else if (finalIndex < 250 && finalIndex >= 50) { //Red, green, or yellow on RGB?
+    setColor3(255, 255, 0);
+  } else {
+    setColor3(0, 255, 0);
+  }
+
 }
 
 void fastSensors() {
+  findIndex();
   dhtOut();
   pmOut();
   vocOut();
