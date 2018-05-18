@@ -4,15 +4,15 @@
     Don't Steal our code plz
 */
 
-//Simplified version, no toggling through display screens. 
+//Simplified version, no toggling through display screens.
 
 /***********/
 /*INTERFACE*/
 /***********/
 int toggleButton = 2; //For the array toggling on OLEDs
 
-float h; //Humidity 
-float t; //Temperature 
+float h; //Humidity
+float t; //Temperature
 
 /****************/
 /*OLED VARIABLES*/
@@ -21,7 +21,7 @@ float t; //Temperature
 #include <Wire.h> //l2c Library 
 #include <Adafruit_SSD1306.h>
 #define OLED_RESET 4
- 
+
 Adafruit_SSD1306 Display1(OLED_RESET); //Initializes a new display object (Display1)
 Adafruit_SSD1306 Display2(OLED_RESET); //Second Display (Display2)
 #define XPOS 0
@@ -34,8 +34,8 @@ Adafruit_SSD1306 Display2(OLED_RESET); //Second Display (Display2)
 /**************/
 /*CO VARIABLES*/
 /**************/
-int SensorReading; //Jack's stuff, stay away Will
-float PPM;
+int SensorReading;
+float PPMnow;
 float PPMaverage;
 
 int HeaterPin5 = 44;
@@ -46,6 +46,7 @@ int HeaterPin15 = 22;
 /***************/
 #include "Adafruit_CCS811.h" //Library for VOC sensor
 Adafruit_CCS811 ccs;
+
 
 /***************/
 /*DHT VARIABLES*/
@@ -83,7 +84,7 @@ float concentration = 0;
 /**************/
 /*   ARRAYS   */
 /**************/
-String measures[] = {"Humidity", "Temp", "PM", "VOC", "CO2", "CO"}; //UNUSED 
+String measures[] = {"Humidity", "Temp", "PM", "VOC", "CO2", "CO"}; //UNUSED
 float values[6];
 
 void setup() {
@@ -91,9 +92,9 @@ void setup() {
   pinMode(toggleButton, INPUT); //UNUSED
 
   Serial.begin(9600);
-    
+
   Display1.begin(SSD1306_SWITCHCAPVCC, 0x3D); //DISPLAY LEFT
-  Display1.clearDisplay(); //Clears the display 
+  Display1.clearDisplay(); //Clears the display
   Display1.display();
 
   Display1.setCursor(30, 8);
@@ -112,7 +113,7 @@ void setup() {
   Display1.println("Aether");
   Display1.display();
   Display2.clearDisplay();
-  Display2.println("Digital Electronics"); //Intro/Loading Screen 
+  Display2.println("Digital Electronics"); //Intro/Loading Screen
   Display2.setCursor(30, 10);
   Display2.println("Will Langas");
   Display2.display();
@@ -208,20 +209,15 @@ void dhtOut() {
   Display1.clearDisplay();
   Display1.println("Humidity: ");
   Display1.setCursor(57, 8);
-  float tf = (t * (9/5)) + 32; //Attempt at printing it in fahrenheit
   Display1.println(h);
   Display1.setCursor(90, 8);
   Display1.println("%");
   Display1.setCursor(0, 20);
   Display1.println("Temp: ");
   Display1.setCursor(30, 20);
-  Display1.println(tf);
+  Display1.println(t);
   Display1.display();
   Display2.clearDisplay();
-  Display2.display();
-
-  return h; //Just in case
-  return t;
 }
 
 /**************/
@@ -241,13 +237,19 @@ void pmOut() {
   lowpulseoccupancy = 0;
   starttime = millis();
 
-  if(concentration >= 250){
-    setColor2(255,0,0);
-  } else if(concentration >= 50 && concentration < 250){
-    setColor2(255,255,0);
+  if (concentration >= 250) {
+    setColor2(255, 0, 0);
+  } else if (concentration >= 50 && concentration < 250) {
+    setColor2(255, 255, 0);
   } else {
-    setColor2(0,255,0);
+    setColor2(0, 255, 0);
   }
+  Display2.setTextSize(1);
+  Display2.setCursor(0, 0);
+  Display2.println("Concentration: ");
+  Display2.setCursor(85, 0);
+  Display2.println(concentration);
+  Display2.display();
 }
 
 /***************/
@@ -266,25 +268,25 @@ void vocOut() {
       Serial.print("ppb   Temp:");
       Serial.println(temp);
     }
-    else{ 
+    else {
       Serial.println("ERROR!");
       while (1);
     }
   }
 
-  if(voc >= 250){
-    setColor(255,0,0);
-  } else if(voc < 250 && voc >= 50){ //Red, green, or yellow on RGB?
-    setColor(255,255,0);
+  if (voc >= 250) {
+    setColor(255, 0, 0);
+  } else if (voc < 250 && voc >= 50) { //Red, green, or yellow on RGB?
+    setColor(255, 255, 0);
   } else {
-    setColor(0,255,0);
+    setColor(0, 255, 0);
   }
 
-  Display2.setCursor(0,20);
+  Display2.setCursor(0, 20);
   Display2.println("VOC: ");
-  Display2.setCursor(25,20);
+  Display2.setCursor(25, 20);
   Display2.println(voc);
-  Display2.setCursor(53,20);
+  Display2.setCursor(53, 20);
   Display2.println("PPB");
   Display2.display();
 }
@@ -297,44 +299,50 @@ void clean() {
     digitalWrite(HeaterPin5, HIGH); //Clean function for CO sensor, 60 iterations
     Serial.println("cleaning");
     delay(1000);
-    fastSensors();
 
     Display2.setTextSize(1);
-    Display2.setCursor(0,8);
+    Display2.setCursor(0, 8);
     Display2.println("CO: ");
-    Display2.setCursor(25,8);
+    Display2.setCursor(25, 8);
     Display2.println("Cleaning");
     Display2.display();
+    fastSensors();
   }
   digitalWrite(HeaterPin5, LOW);
 }
 
-float values[90];
-
 void co() {
-  for (int i = 0; i < 90; i++) { //Averages CO values
+  float sumPPM[90];
+  for (int i = 0; i < 90; i++) {
     digitalWrite(HeaterPin15, HIGH);
     SensorReading = analogRead(A1);
 
-    PPM = .5 * SensorReading - 19.355;
-    Serial.print (PPM);
+    PPMnow = .5 * SensorReading - 19.355;
+    Serial.print (PPMnow);
     Serial.println (" CO PPM");
+    sumPPM[i] = PPMnow;
     fastSensors();
+
     delay(1000);
-    values[i] = PPM; //WORK ON THIS
   }
+  float sum;
   digitalWrite(HeaterPin15, LOW);
-  values[5] = PPM;
+  for (int i = 0; i < 90; i++) {
+    sum += sumPPM[i];
+  }
+
+  float finalPPM = sum / 90;
+  Serial.println(finalPPM);
+  Serial.print("AHHHHHH");
 }
 
 void fastSensors() {
-  pmOut();
   dhtOut();
+  pmOut();
   vocOut();
 }
 
 void loop() {
   clean();
   co();
-  fastSensors();
 }
