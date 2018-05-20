@@ -40,15 +40,14 @@ int SensorReading;
 float PPMnow;
 float PPMaverage;
 
-int HeaterPin5 = 44;
+int HeaterPin5 = 44; //Corresponds to pins on carbon monoxide sensor
 int HeaterPin15 = 22;
 
 /***************/
 /*CCS VARIABLES*/
 /***************/
 #include "Adafruit_CCS811.h" //Library for VOC sensor
-Adafruit_CCS811 ccs;
-
+Adafruit_CCS811 ccs; //CCS811 object
 
 /***************/
 /*DHT VARIABLES*/
@@ -81,7 +80,7 @@ unsigned long starttime;
 unsigned long sampletime_ms = 30000;//sampe 30s ;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
-float concentration = 0;
+float concentration = 0; //Used to measure pieces of dust
 
 void setup() {
 
@@ -95,7 +94,7 @@ void setup() {
 
   Display1.setCursor(30, 8);
   Display1.setTextSize(2);
-  Display1.setTextColor(WHITE, BLACK);
+  Display1.setTextColor(WHITE, BLACK); //Black text on no background
 
   Display2.begin(SSD1306_SWITCHCAPVCC, 0x3C); //DISPLAY RIGHT
   Display2.clearDisplay();
@@ -111,14 +110,14 @@ void setup() {
   Display2.clearDisplay();
   Display2.println("Digital Electronics"); //Intro/Loading Screen
   Display2.setCursor(30, 10);
-  Display2.println("Will Langas");
+  Display2.println("Will Langas"); //Supreme overlord
   Display2.display();
   Display2.setCursor(30, 22);
-  Display2.println("Jack Kelly");
+  Display2.println("Jack Kelly"); //Measly peasant 
   Display2.display();
 
   if (!ccs.begin()) {
-    Serial.println("Failed to start sensor! Please check your wiring.");
+    Serial.println("Failed to start sensor! Please check your wiring."); //If voc fails to start 
     while (1);
   }
 
@@ -158,12 +157,6 @@ void bothDisplay() {
   Display2.display();
 }
 
-void bothClear() {
-  Display1.clearDisplay();
-  Display2.clearDisplay();
-  bothDisplay();
-}
-
 /***************/
 /*RGB FUNCTIONS*/
 /***************/
@@ -185,7 +178,7 @@ void setColor3(int redValue, int greenValue, int blueValue) {
   analogWrite(bluePin3, blueValue);
 }
 
-int everything(float in) {
+int everything(float in) {  //Master function, does everything pretty much (Not CO)
 
   //DHT
   int readData = DHT.read22(dataPin); // Reads the data from the sensor
@@ -203,7 +196,7 @@ int everything(float in) {
 
   //PM
   duration = pulseIn(pm, LOW);
-  lowpulseoccupancy = lowpulseoccupancy + duration;
+  lowpulseoccupancy = lowpulseoccupancy + duration; //Refer to spec sheet for details on function 
 
   ratio = lowpulseoccupancy / (sampletime_ms * 10.0); // Integer percentage 0=>100
   concentration = 1.1 * pow(0, 3) - 3.8 * pow(0, 2) + 520 * 0 + 0.62; // using spec sheet curve
@@ -224,7 +217,7 @@ int everything(float in) {
     if (!ccs.readData()) {
       Serial.print("CO2: ");
       Serial.print(co2);
-      Serial.print("ppm, TVOC: ");
+      Serial.print("ppm, TVOC: "); //Keep this here for testing, prints to serial monitor
       Serial.print(voc);
       Serial.print("ppb   Temp:");
       Serial.println(temp);
@@ -262,7 +255,7 @@ int everything(float in) {
 
   //INDEX CALCULATION
   float vocIndex = (-0.06 * voc) - 4;
-  float pmIndex = (-0.096227 * concentration) - 3.3404;
+  float pmIndex = (-0.096227 * concentration) - 3.3404; //All calculations are linear regression 
   if (in == 0) {
     pmIndex = - 0;
   } else {
@@ -272,10 +265,10 @@ int everything(float in) {
   float index = 100 + vocIndex + pmIndex;
 
   //OLED PRINTING
-
-  float measures[7] = {index, t, h, concentration, voc, co2, finalPPM};
+  float measures[7] = {index, t, h, concentration, voc, co2, finalPPM}; //All the measured variables
+  
   int i = 0;
-  if (digitalRead(button) == 1) {
+  if (digitalRead(button) == 1) { //Uses button press to toggle through measurements 
     i++;
 
     Display1.setTextSize(3);
@@ -306,7 +299,7 @@ void clean() {
 
 float co() {
   float sumPPM[90];
-  for (int i = 0; i < 90; i++) {
+  for (int i = 0; i < 90; i++) { //Start of averaging loop 
     digitalWrite(HeaterPin15, HIGH);
     SensorReading = analogRead(A1);
     finalPPM = 0;
