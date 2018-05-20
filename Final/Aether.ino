@@ -125,7 +125,6 @@ void setup() {
   float temp = ccs.calculateTemperature(); //Starts up VOC sensor
   ccs.setTempOffset(temp - 25.0);
 
-  Serial.begin(9600);
   pinMode(pm, INPUT);
   starttime = millis(); //Current time
 
