@@ -7,7 +7,7 @@
 //Simplified version, no toggling through display screens.
 
 float index = 100;
-
+float finalPPM = 0;
 /***********/
 /*INTERFACE*/
 /***********/
@@ -99,7 +99,7 @@ void setup() {
   Display1.clearDisplay(); //Clears the display
   Display1.display();
 
-  Display1.setCursor(30, 8);
+  Display1.setCursor(30,8);
   Display1.setTextSize(2);
   Display1.setTextColor(WHITE, BLACK);
 
@@ -107,7 +107,7 @@ void setup() {
   Display2.clearDisplay();
   Display2.display();
 
-  Display2.setCursor(5, 0);
+  Display2.setCursor(5,0);
   Display2.setTextSize(1);
   Display2.setTextColor(WHITE, BLACK);
   Display2.clearDisplay();
@@ -189,10 +189,11 @@ void setColor3(int redValue, int greenValue, int blueValue) {
   analogWrite(bluePin3, blueValue);
 }
 
-/***************/
-/*DHT FUNCTIONS*/
-/***************/
-int dhtOut() {
+int everything(float in) {
+  
+  
+  
+  //DHT
   int readData = DHT.read22(dataPin); // Reads the data from the sensor
 
   float t = DHT.temperature; // Gets the values of the temperature
@@ -206,29 +207,10 @@ int dhtOut() {
   Serial.print(h);
   Serial.println(" % ");
 
-  Display1.setCursor(0, 8);
-  Display1.setTextSize(1);
-  Display1.clearDisplay();
-  Display1.println("Humidity: ");
-  Display1.setCursor(57, 8);
-  Display1.println(h);
-  Display1.setCursor(90, 8);
-  Display1.println("%");
-  Display1.setCursor(0, 20);
-  Display1.println("Temp: ");
-  Display1.setCursor(30, 20);
-  Display1.println(t);
-  Display1.display();
-  Display2.clearDisplay();
 
-  return t;
-  return h;
-}
 
-/**************/
-/*PM FUNCTIONS*/
-/**************/
-int pmOut() {
+
+  //PM
   duration = pulseIn(pm, LOW);
   lowpulseoccupancy = lowpulseoccupancy + duration;
 
@@ -242,30 +224,8 @@ int pmOut() {
   lowpulseoccupancy = 0;
   starttime = millis();
 
-  if (concentration >= 250) {
-    setColor2(255, 0, 0);
-  } else if (concentration >= 50 && concentration < 250) {
-    setColor2(255, 255, 0);
-  } else {
-    setColor2(0, 255, 0);
-  }
-  Display2.setTextSize(1);
-  Display2.setCursor(0, 0);
-  Display2.println("Concentration: ");
-  Display2.setCursor(85, 0);
-  Display2.println(concentration);
-  Display2.display();
 
-  float pmIndex = (-0.096227 * concentration) - 3.3404;
-
-  return pmIndex;
-  return concentration;
-}
-
-/***************/
-/*VOC FUNCTIONS*/
-/***************/
-int vocOut() {
+  //VOC
   int voc = ccs.getTVOC();
   int co2 = ccs.geteCO2(); //Acquires VOC and CO2 Measurements, REMOVE CO2 COMPLETELY???
   if (ccs.available()) {
@@ -284,14 +244,50 @@ int vocOut() {
     }
   }
 
-  if (voc >= 250) {
+    //RGB CODE
+    if (concentration >= 250) { //FOR PM
+    setColor2(255, 0, 0);
+  } else if (concentration >= 50 && concentration < 250) {
+    setColor2(40, 95, 0);
+  } else {
+    setColor2(0, 255, 0);
+  }
+
+  if (voc >= 250) { //FOR VOC
     setColor(255, 0, 0);
   } else if (voc < 250 && voc >= 50) { //Red, green, or yellow on RGB?
-    setColor(255, 255, 0);
+    setColor(40, 95, 0);
   } else {
     setColor(0, 255, 0);
   }
 
+  if (index <= 80){
+    setColor3(255,0,0);
+  } else if(index < 90 && index >= 80){
+    setColor3(40,95,0);
+  } else {
+    setColor3(0,255,0);
+  }
+
+  //INDEX CALCULATION
+  float vocIndex = (-0.06 * voc) - 4;
+  float pmIndex = (-0.096227 * concentration) - 3.3404;
+  if(in == 0){
+    pmIndex =- 0;
+  } else {
+    pmIndex =  pmIndex + ((-0.1765 * in) - 12.88);
+  }
+  
+  float index = 100 + vocIndex + pmIndex;
+
+  //OLED PRINTING
+
+  Display2.setTextSize(1);   //PM AND VOC PRINTING 
+  Display2.setCursor(0, 0);
+  Display2.println("Concentration: ");
+  Display2.setCursor(85, 0);
+  Display2.println(concentration); 
+   
   Display2.setCursor(0, 20);
   Display2.println("VOC: ");
   Display2.setCursor(25, 20);
@@ -299,92 +295,83 @@ int vocOut() {
   Display2.setCursor(53, 20);
   Display2.println("PPB");
   Display2.display();
+  Display1.clearDisplay();
 
-  float vocIndex = (-0.06 * voc) - 4;
-
-  return vocIndex;
-  return voc;
+  Display1.setTextSize(1);
+  Display1.setCursor(0,0);
+  Display1.println("Index: ");
+  Display1.setCursor(38,0);
+  Display1.println(index);
+  
+  Display1.setCursor(0, 8);  //HUMIDITY AND TEMP
+  Display1.println("Humidity: ");
+  Display1.setCursor(57, 8);
+  Display1.println(h);
+  Display1.setCursor(90, 8);
+  Display1.println("%");
+  Display1.setCursor(0, 20);
+  Display1.println("Temp: ");
+  Display1.setCursor(30, 20);
+  Display1.println(t);
+  
+  Display1.display();
+  Display2.clearDisplay();
 }
 
-/*********************/
-/*CO SENSOR FUNCTIONS*/
-/*********************/
 void clean() {
   for (int i = 0; i < 60; i++) {
     digitalWrite(HeaterPin5, HIGH); //Clean function for CO sensor, 60 iterations
     Serial.println("cleaning");
     delay(1000);
-
+    
     Display2.setTextSize(1);
     Display2.setCursor(0, 8);
     Display2.println("CO: ");
     Display2.setCursor(25, 8);
     Display2.println("Cleaning");
-    Display2.display();
-    fastSensors();
+    everything(0);
   }
   digitalWrite(HeaterPin5, LOW);
 }
 
-int co() {
+float co() {
   float sumPPM[90];
+  
   for (int i = 0; i < 90; i++) {
     digitalWrite(HeaterPin15, HIGH);
     SensorReading = analogRead(A1);
-
+    finalPPM = 0;
     PPMnow = .5 * SensorReading - 19.355;
-    Serial.print (PPMnow);
-    Serial.println (" CO PPM");
+    Serial.print(PPMnow);
+    Serial.println(" CO PPM");
+    Display2.setCursor(25,8);
+    Display2.println(PPMnow);
     sumPPM[i] = PPMnow;
-    fastSensors();
-
-    delay(1000);
+    
+    Display2.setTextSize(1);
+    Display2.setCursor(0, 8);
+    Display2.println("CO: ");
+    Display2.setCursor(25, 8);
+    Display2.println(finalPPM);
+    everything(finalPPM);
+    delay(1000); 
   }
+  
   float sum;
+  
   digitalWrite(HeaterPin15, LOW);
   for (int i = 0; i < 90; i++) {
     sum += sumPPM[i];
     return sum;
   }
 
-  float finalPPM = sum / 90;
-  Serial.println(finalPPM);
-  Serial.print("AHHHHHH");
+  finalPPM = sum / 90;
+  float coIndex = (-0.1765 * finalPPM) - 12.88;
 
-  float coIndex = (-0.1765*finalPPM) -12.88;
-
-  return coIndex; //ARRAY WITH BOTH TO BE RETURNED
   return finalPPM;
 }
 
-float findIndex(){
-  float finalIndex = index - pmIndex - vocIndex - coIndex;
-  Display1.setCursor(0,0)
-  Display1.setTextSize(1);
-  Display1.println("Index: ");
-  Display1.setCursor(50);
-  Display1.println(finalIndex);
-  Display1.display();
-  Display2.clearDisplay();
-
-  if (finalIndex >= 250) {
-    setColor3(255, 0, 0);
-  } else if (finalIndex < 250 && finalIndex >= 50) { //Red, green, or yellow on RGB?
-    setColor3(255, 255, 0);
-  } else {
-    setColor3(0, 255, 0);
-  }
-
-}
-
-void fastSensors() {
-  findIndex();
-  dhtOut();
-  pmOut();
-  vocOut();
-}
-
-void loop() {
+void loop(){
   clean();
   co();
 }
