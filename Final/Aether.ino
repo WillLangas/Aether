@@ -283,6 +283,7 @@ int everything(float in) {  //Master function, does everything pretty much (Not 
     Display2.println(units[i - 1]);
     Display2.display();
     Display1.clearDisplay();
+    //There might need to be a quick delay here
   }
 }
 
