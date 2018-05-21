@@ -3,23 +3,18 @@
     5/20/2018
     Don't Steal our code plz
     Serial Printing Removed, Completely Optimized for performance
+    Some Variables removed, not made for comprension
 */
 
 float index = 100;
 float finalPPM = 0;
-/***********/
-/*INTERFACE*/
-/***********/
-int button = 5; //For the array toggling on OLEDs
 
 float h; //Humidity
 float t; //Temperature
 
 String values[7] = {"Index: ", "Temp: ", "Humid: ", "Dust: ", "VOC: ", "CO2: ", "CO: "};
 String units[7] = {" ", "C", "%", "Pcs", "PPM", "PPB", "PPM"};
-/****************/
-/*OLED VARIABLES*/
-/****************/
+
 #include <SPI.h>
 #include <Wire.h> //l2c Library 
 #include <Adafruit_SSD1306.h>
@@ -34,15 +29,12 @@ Adafruit_SSD1306 Display2(OLED_RESET); //Second Display (Display2)
 #define LOGO16_GLCD_HEIGHT 16
 #define LOGO16_GLCD_WIDTH  16
 
-/**************/
-/*CO VARIABLES*/
-/**************/
 int SensorReading;
 float PPMnow;
 float PPMaverage;
 
-int HeaterPin5 = 44; //Corresponds to pins on carbon monoxide sensor
-int HeaterPin15 = 22;
+//Heater pin 5 is 44 on arduino
+//Heater pin 15 is 22 on arduino 
 
 /***************/
 /*CCS VARIABLES*/
@@ -85,7 +77,7 @@ float concentration = 0; //Used to measure pieces of dust
 
 void setup() {
 
-  pinMode(button, INPUT);
+  pinMode(5, INPUT);
 
   Display1.begin(SSD1306_SWITCHCAPVCC, 0x3D); //DISPLAY LEFT
   Display1.clearDisplay(); //Clears the display
@@ -132,8 +124,9 @@ void setup() {
   pinMode(redPin3, OUTPUT);
   pinMode(greenPin3, OUTPUT);
   pinMode(bluePin3, OUTPUT);
-  pinMode(HeaterPin5, OUTPUT);
-  pinMode(HeaterPin15, OUTPUT);
+  
+  pinMode(44, OUTPUT);
+  pinMode(22, OUTPUT);
 
   delay(5000);
   Display1.clearDisplay();
@@ -237,7 +230,7 @@ int everything(float in) {  //Master function, does everything pretty much (Not 
   float measures[7] = {index, t, h, concentration, voc, co2, finalPPM}; //All the measured variables
   
   int i = 0;
-  if (digitalRead(button) == 1) { //Uses button press to toggle through measurements 
+  if (digitalRead(5) == 1) { //Uses button press to toggle through measurements 
     i++;
 
     Display1.setTextSize(3);
@@ -253,23 +246,24 @@ int everything(float in) {  //Master function, does everything pretty much (Not 
     Display2.println(units[i - 1]);
     Display2.display();
     Display1.clearDisplay();
+    //A Delay may be needed here
   }
 }
 
 void clean() {
   for (int i = 0; i < 60; i++) {
-    digitalWrite(HeaterPin5, HIGH); //Clean function for CO sensor, 60 iterations
+    digitalWrite(44, HIGH); //Clean function for CO sensor, 60 iterations
     Serial.println("cleaning");
     delay(1000);
     everything(0);
   }
-  digitalWrite(HeaterPin5, LOW);
+  digitalWrite(44, LOW);
 }
 
 float co() {
   float sumPPM[90];
   for (int i = 0; i < 90; i++) { //Start of averaging loop 
-    digitalWrite(HeaterPin15, HIGH);
+    digitalWrite(22, HIGH);
     SensorReading = analogRead(A1);
     finalPPM = 0;
     PPMnow = .5 * SensorReading - 19.355;
