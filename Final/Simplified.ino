@@ -145,6 +145,7 @@ void setup() {
   pinMode(redPin3, OUTPUT);
   pinMode(greenPin3, OUTPUT);
   pinMode(bluePin3, OUTPUT);
+  pinMode(9,OUTPUT); //Reset pin
   pinMode(HeaterPin5, OUTPUT);
   pinMode(HeaterPin15, OUTPUT);
 
@@ -211,18 +212,17 @@ int everything(float in) {
 
 
   //PM
-  duration = pulseIn(pm, LOW);
-  lowpulseoccupancy = lowpulseoccupancy + duration;
-
-  ratio = lowpulseoccupancy / (sampletime_ms * 10.0); // Integer percentage 0=>100
-  concentration = 1.1 * pow(0, 3) - 3.8 * pow(0, 2) + 520 * 0 + 0.62; // using spec sheet curve
-  Serial.print("concentration = ");
-  Serial.print(concentration);
-  Serial.println(" pcs/0.01cf");
-  Serial.println("\n");
-  Serial.println(ratio);
-  lowpulseoccupancy = 0;
-  starttime = millis();
+  duration = pulseIn(8, LOW);
+  lowpulseoccupancy = lowpulseoccupancy+duration;
+ 
+    ratio = lowpulseoccupancy/(sampletime_ms*10.0);  // Integer percentage 0=>100
+    concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; // using spec sheet curve
+    Serial.print("concentration = ");
+    Serial.print(concentration);
+    Serial.println(" pcs/0.01cf");
+    Serial.println("\n");
+    lowpulseoccupancy = 0;
+    starttime = millis();
 
 
   //VOC
@@ -244,32 +244,7 @@ int everything(float in) {
     }
   }
 
-    //RGB CODE
-    if (concentration >= 250) { //FOR PM
-    setColor2(255, 0, 0);
-  } else if (concentration >= 50 && concentration < 250) {
-    setColor2(40, 95, 0);
-  } else {
-    setColor2(0, 255, 0);
-  }
-
-  if (voc >= 250) { //FOR VOC
-    setColor(255, 0, 0);
-  } else if (voc < 250 && voc >= 50) { //Red, green, or yellow on RGB?
-    setColor(40, 95, 0);
-  } else {
-    setColor(0, 255, 0);
-  }
-
-  if (index <= 80){
-    setColor3(255,0,0);
-  } else if(index < 90 && index >= 80){
-    setColor3(40,95,0);
-  } else {
-    setColor3(0,255,0);
-  }
-
-  //INDEX CALCULATION
+ //INDEX CALCULATION
   float vocIndex = (-0.06 * voc) - 4;
   float pmIndex = (-0.096227 * concentration) - 3.3404;
   if(in == 0){
@@ -279,6 +254,33 @@ int everything(float in) {
   }
   
   float index = 100 + vocIndex + pmIndex;
+
+    //RGB CODE
+    if (concentration >= 250) { //FOR PM
+    setColor2(255, 0, 0);
+  } else if (concentration >= 50 && concentration < 250) {
+    setColor2(255, 255, 0);
+  } else {
+    setColor2(0, 255, 0);
+  }
+
+  if (voc >= 250) { //FOR VOC
+    setColor(255, 0, 0);
+  } else if (voc < 250 && voc >= 50) { //Red, green, or yellow on RGB?
+    setColor(255, 255, 0);
+  } else {
+    setColor(0, 255, 0);
+  }
+
+  if (index <= 80){
+    setColor3(255,0,0);
+  } else if(index < 90 && index >= 80){
+    setColor3(255,255,0);
+  } else {
+    setColor3(0,255,0);
+  }
+
+ 
 
   //OLED PRINTING
 
@@ -374,4 +376,5 @@ float co() {
 void loop(){
   clean();
   co();
+
 }
